@@ -1,6 +1,6 @@
 {
-	"name": "Ghoster",
-	"productName": "Example Name",
+	"name": "ghoster-heatmap",
+	"productName": "Ghoster Heatmap",
 	"version": "1.0.0",
 	"main": ".webpack/main",
 	"scripts": {
