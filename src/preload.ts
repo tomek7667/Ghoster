@@ -22,9 +22,7 @@ window.addEventListener("DOMContentLoaded", () => {
 	ipcRenderer.send("getAppVersion");
 
 	ipcRenderer.on("appVersion", (event, appVersion) => {
-		document.getElementById(
-			"title"
-		).innerText = `examplename ${appVersion}`;
+		document.getElementById("title").innerText = `Ghoster ${appVersion}`;
 	});
 
 	ipcRenderer.on("run", (event, args) => {
