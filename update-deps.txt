@@ -1,0 +1,2 @@
+yarn add -D @electron-forge/cli @electron-forge/maker-deb @electron-forge/maker-rpm @electron-forge/maker-squirrel @electron-forge/maker-zip @electron-forge/plugin-auto-unpack-natives @electron-forge/plugin-webpack @typescript-eslint/eslint-plugin @typescript-eslint/parser @vercel/webpack-asset-relocator-loader copy-webpack-plugin css-loader electron eslint eslint-plugin-import fork-ts-checker-webpack-plugin node-loader style-loader ts-loader ts-node typescript
+yarn add biotech-js electron-squirrel-startup
