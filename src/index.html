@@ -5,19 +5,17 @@
 		<title>Ghoster Heatmap</title>
 	</head>
 	<body>
-		<div class="hero">
-			<div class="hero-body">
-				<div class="content">
-					<h1 id="title">Ghoster Heatmap</h1>
-					<h2>author: Tomasz Dąbrowski</h2>
-					<hr />
-					<div class="file">
-						<!-- TODO: User chooses either one:
+		<section class="section content">
+			<h1 id="title">Ghoster Heatmap</h1>
+			<div>author: Tomasz Dąbrowski</div>
+		</section>
+		<!-- <div class="file"> -->
+		<!-- TODO: User chooses either one:
 							- Upload fasta to koala and wait for the processing result. Give the user a link to the result
 							or
 							- Upload csv (koala results) - skipping the above							
 						-->
-						<label class="file-label">
+		<!-- <label class="file-label">
 							<input
 								class="file-input"
 								type="file"
@@ -28,11 +26,26 @@
 									>Select the input file</span
 								>
 							</span>
-						</label>
-					</div>
-					<span id="sequence-file-label"></span>
+						</label> -->
+		<!-- </div> -->
+		<!-- <span id="sequence-file-label"></span> -->
+		<section class="section content">
+			<h2>Send sequences to Ghost</h2>
+			<div class="notification is-danger">Not implemented yet</div>
+		</section>
+
+		<section class="section content">
+			<h2>Generate Heatmap</h2>
+			<div class="buttons">
+				<button class="button is-primary">Pick K0 numbers file</button>
+				<button class="button is-light is-primary">
+					Pick Ghost output files
+				</button>
+				<div>
+					<h3>Picked ghost output files:</h3>
+					<ul id="ghost-files-ul"></ul>
 				</div>
 			</div>
-		</div>
+		</section>
 	</body>
 </html>

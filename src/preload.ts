@@ -19,6 +19,8 @@ export const unblockElement = (element: HTMLElement) => {
 };
 
 window.addEventListener("DOMContentLoaded", () => {
+	let csvs: string[] = [];
+
 	ipcRenderer.send("getAppVersion");
 
 	ipcRenderer.on("appVersion", (event, appVersion) => {
