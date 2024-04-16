@@ -88,7 +88,8 @@ export const getFastaFileContent = (
 
 export const uploadGhostFiles = async (
 	fastaContent: string,
-	sessionId: string
+	sessionId: string,
+	i: number
 ) => {
 	const email = `koala_${sessionId}@cyber-man.pl`;
 	const url = `https://www.kegg.jp:443/kegg-bin/blastkoala_request`;
@@ -97,39 +98,25 @@ export const uploadGhostFiles = async (
 		Accept:
 			"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
 		Referer: "https://www.kegg.jp/ghostkoala/",
-		"Content-Type":
-			"multipart/form-data; boundary=----WebKitFormBoundary0anAcwBBPlduQWHP",
 	};
-	const body = `------WebKitFormBoundary0anAcwBBPlduQWHP
-Content-Disposition: form-data; name="sequence_data"
-
-
-------WebKitFormBoundary0anAcwBBPlduQWHP
-Content-Disposition: form-data; name="input_file"; filename="short.fa"
-Content-Type: application/octet-stream
-
-${fastaContent}
-
-------WebKitFormBoundary0anAcwBBPlduQWHP
-Content-Disposition: form-data; name="db_type"
-
-c_family_euk+genus_prok+viruses
-------WebKitFormBoundary0anAcwBBPlduQWHP
-Content-Disposition: form-data; name="email"
-
-${email}
-------WebKitFormBoundary0anAcwBBPlduQWHP
-Content-Disposition: form-data; name="type"
-
-ghostkoala
-------WebKitFormBoundary0anAcwBBPlduQWHP--
-`;
+	const body = new FormData();
+	body.append("sequence_data", "");
+	body.append(
+		"input_file",
+		new Blob([fastaContent], { type: "text/plain" }),
+		`${sessionId}_${i}.fa`
+	);
+	body.append("db_type", "c_family_euk+genus_prok+viruses");
+	body.append("email", email);
+	body.append("type", "ghostkoala");
 	const response = await fetch(url, {
 		method: "POST",
-		headers,
+		headers: {
+			...headers,
+			"Content-Type": `multipart/form-data;`,
+		},
 		body,
 	});
-	// console.log(response.status, response.statusText);
 	const text = await response.text();
 	if (text.includes("An email has been sent to")) {
 		return;

@@ -280,7 +280,7 @@ ipcMain.on(
 					"link"
 				);
 				const fastaContent = contents[i];
-				await uploadGhostFiles(fastaContent, _sessionId);
+				await uploadGhostFiles(fastaContent, _sessionId, i);
 			}
 
 			// 5. Send back the session id
@@ -294,7 +294,7 @@ ipcMain.on(
 				sessionId,
 			});
 		} catch (error) {
-			console.log("send-sequences-files", error);
+			// console.log("send-sequences-files", error);
 			setStatus(event, error?.message, "danger");
 		}
 	}
@@ -348,8 +348,12 @@ ipcMain.on("check-sequences-status", async (event, _sessionId: string) => {
 				event.sender.send("csv-saved", destFile);
 			}
 		} catch (error) {
-			console.log("check-sequences-status", error);
-			setStatus(event, error?.message, "danger");
+			// console.log("check-sequences-status", error);
+			setStatus(
+				event,
+				`${error?.message}<br /><br />If you are getting not-existing records, just wait for the e-mail confirmation to hit the worker.`,
+				"danger"
+			);
 		}
 	}, CHECK_INTERVAL_SECONDS * 1000);
 });
