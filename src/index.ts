@@ -6,7 +6,7 @@ import {
 	IpcMainEvent,
 	shell,
 } from "electron";
-import { writeFileSync, mkdirSync } from "fs";
+import { writeFileSync } from "fs";
 import * as ExcelJS from "exceljs";
 import path from "path";
 import { generateHeatmap } from "./lib";
@@ -249,7 +249,7 @@ ipcMain.on(
 	"send-sequences-files",
 	async (event: IpcMainEvent, files: string[]) => {
 		try {
-			sessionId = Math.random().toString(36).substring(7);
+			const _sessionId = Math.random().toString(36).substring(7);
 			// 1. read sequences
 			setStatus(event, "1/5 Reading sequences...", "link");
 			const sequences = await readSequences(files);
@@ -271,7 +271,7 @@ ipcMain.on(
 					"link"
 				);
 				const fastaContent = contents[i];
-				await uploadGhostFiles(fastaContent, sessionId);
+				await uploadGhostFiles(fastaContent, _sessionId);
 			}
 
 			// 5. Send back the session id
@@ -280,6 +280,7 @@ ipcMain.on(
 				`5/5 All sequences uploaded. Running status checker each ${CHECK_INTERVAL_SECONDS} seconds...`,
 				"success"
 			);
+			sessionId = _sessionId;
 			event.sender.send("send-sequences-files", {
 				sessionId,
 			});
