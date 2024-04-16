@@ -35,12 +35,20 @@ window.addEventListener("DOMContentLoaded", () => {
 		heatmap: [],
 	};
 	let sequencesFilesPaths: string[] = [];
+	let sessionId: string = "";
 
 	const sequenceFilesUl = document.getElementById("sequence-files-ul");
 	const pickSequencesButton = document.getElementById(
 		"pick-sequence-file-button"
 	);
 	const sendButton = document.getElementById("send-button");
+	const statusBox = document.getElementById("ghost-status-box");
+	const sessionIdInput: HTMLInputElement = document.getElementById(
+		"session-id-input"
+	) as any;
+	const updateSessionIdButton = document.getElementById(
+		"update-session-id-button"
+	);
 	const tableWrapper = document.getElementById("table-wrapper");
 	const ghostFilesUl = document.getElementById("ghost-files-ul");
 	const k0FileUl = document.getElementById("k0-file-ul");
@@ -244,5 +252,44 @@ window.addEventListener("DOMContentLoaded", () => {
 	ipcRenderer.on("pick-sequences-files", (event, files) => {
 		sequencesFilesPaths = files;
 		updateSequencesFiles();
+	});
+
+	const clearStatusBox = () => {
+		statusBox.classList.remove("is-danger");
+		statusBox.classList.remove("is-link");
+		statusBox.classList.remove("is-success");
+		statusBox.innerText = "";
+	};
+	const setStatusBox = (message: string, type: string) => {
+		clearStatusBox();
+		statusBox.classList.add(`is-${type}`);
+		statusBox.innerText = message;
+	};
+
+	sendButton.addEventListener("click", () => {
+		blockElement(sendButton);
+		blockElement(pickSequencesButton);
+		ipcRenderer.send("send-sequences-files", sequencesFilesPaths);
+		clearStatusBox();
+		setStatusBox("Sending sequences files...", "link");
+	});
+	updateSessionIdButton.addEventListener("click", () => {
+		ipcRenderer.send("abort-sequences-status");
+		sessionId = sessionIdInput.value;
+		ipcRenderer.send("check-sequences-status", sessionId);
+	});
+	ipcRenderer.on("send-sequences-files", (event, args) => {
+		unblockElement(sendButton);
+		unblockElement(pickSequencesButton);
+		const { sessionId: newSessionId } = args;
+		sessionId = newSessionId;
+		sessionIdInput.value = sessionId;
+		ipcRenderer.send("check-sequences-status", sessionId);
+	});
+	ipcRenderer.on("check-sequences-status", (event, args) => {
+		const { message, type } = args;
+		clearStatusBox();
+		setStatusBox(message, type);
+		// TODO: if it's done, automatically download, unpack files and set them as 'ghost output files'
 	});
 });
