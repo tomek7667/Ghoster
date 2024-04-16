@@ -45,6 +45,7 @@
 	},
 	"dependencies": {
 		"biotech-js": "^1.0.10",
-		"electron-squirrel-startup": "^1.0.0"
+		"electron-squirrel-startup": "^1.0.0",
+		"exceljs": "^4.4.0"
 	}
 }

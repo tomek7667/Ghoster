@@ -37,15 +37,22 @@
 		<section class="section content">
 			<h2>Generate Heatmap</h2>
 			<div class="buttons">
-				<button class="button is-primary">Pick K0 numbers file</button>
-				<button class="button is-light is-primary">
+				<button class="button is-primary" id="pick-k0-button">Pick K0 numbers file</button>
+				<button class="button is-light is-primary" id="pick-ghost-files-button">
 					Pick Ghost output files
 				</button>
-				<div>
-					<h3>Picked ghost output files:</h3>
-					<ul id="ghost-files-ul"></ul>
-				</div>
+				<button class="button is-danger" id="run-button">Run</button>
 			</div>
+			<div class="box">
+				<p>Picked ghost output files:</p>
+				<ul id="ghost-files-ul"></ul>
+				<p>Picked k0 numbers file:</p>
+				<ul id="k0-file-ul"></ul>
+			</div>
+		</section>
+		<section class="section content">
+			<h2>Results</h2>
+			<div id="table-wrapper" style="overflow: auto; width: 100%; height: 100%;"></div>
 		</section>
 	</body>
 </html>
