@@ -34,7 +34,13 @@ window.addEventListener("DOMContentLoaded", () => {
 		k0s: [],
 		heatmap: [],
 	};
+	let sequencesFilesPaths: string[] = [];
 
+	const sequenceFilesUl = document.getElementById("sequence-files-ul");
+	const pickSequencesButton = document.getElementById(
+		"pick-sequence-file-button"
+	);
+	const sendButton = document.getElementById("send-button");
 	const tableWrapper = document.getElementById("table-wrapper");
 	const ghostFilesUl = document.getElementById("ghost-files-ul");
 	const k0FileUl = document.getElementById("k0-file-ul");
@@ -43,9 +49,7 @@ window.addEventListener("DOMContentLoaded", () => {
 		"pick-ghost-files-button"
 	);
 	const runButton = document.getElementById("run-button");
-	const showTableCheckbox: any = document.getElementById(
-		"show-table-checkbox"
-	);
+	const showTableCheckbox: any = document.getElementById("show-table-checkbox");
 
 	const updateGhostFiles = () => {
 		clearGhostFiles();
@@ -177,6 +181,18 @@ window.addEventListener("DOMContentLoaded", () => {
 		tableWrapper.innerHTML = "";
 	};
 
+	const updateSequencesFiles = () => {
+		clearSequencesFiles();
+		sequencesFilesPaths.forEach((csv) => {
+			const li = document.createElement("li");
+			li.innerText = csv;
+			sequenceFilesUl.appendChild(li);
+		});
+	};
+	const clearSequencesFiles = () => {
+		sequenceFilesUl.innerHTML = "";
+	};
+
 	// LOGIC
 	ipcRenderer.send("getAppVersion");
 	ipcRenderer.on("appVersion", (event, appVersion) => {
@@ -220,5 +236,13 @@ window.addEventListener("DOMContentLoaded", () => {
 	ipcRenderer.on("pick-k0-file", (event, file) => {
 		k0path = file;
 		updateK0File();
+	});
+
+	pickSequencesButton.addEventListener("click", () => {
+		ipcRenderer.send("pick-sequences-files");
+	});
+	ipcRenderer.on("pick-sequences-files", (event, files) => {
+		sequencesFilesPaths = files;
+		updateSequencesFiles();
 	});
 });

@@ -3,6 +3,7 @@ import { writeFileSync } from "fs";
 import * as ExcelJS from "exceljs";
 import path from "path";
 import { generateHeatmap } from "./lib";
+import { FileExtension, FileExtensionHandler } from "biotech-js";
 
 interface Heatmap {
 	k0s: string[];
@@ -205,5 +206,24 @@ ipcMain.on("save-heatmap-excel", async (event, heatmap: Heatmap) => {
 	if (excelFile) {
 		await createExcelFile(excelFile, heatmap);
 		shell.showItemInFolder(excelFile);
+	}
+});
+
+ipcMain.on("pick-sequences-files", async (event) => {
+	const files = dialog.showOpenDialogSync({
+		properties: ["openFile", "multiSelections"],
+		filters: [
+			{
+				name: "Sequences files",
+				extensions: [
+					...FileExtensionHandler.Fasta(),
+					...FileExtensionHandler.Fastq(),
+					...FileExtensionHandler.Genbank(),
+				],
+			},
+		],
+	});
+	if (files) {
+		event.sender.send("pick-sequences-files", files);
 	}
 });
