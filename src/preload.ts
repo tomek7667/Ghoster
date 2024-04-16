@@ -43,6 +43,9 @@ window.addEventListener("DOMContentLoaded", () => {
 		"pick-ghost-files-button"
 	);
 	const runButton = document.getElementById("run-button");
+	const showTableCheckbox: any = document.getElementById(
+		"show-table-checkbox"
+	);
 
 	const updateGhostFiles = () => {
 		clearGhostFiles();
@@ -198,9 +201,7 @@ window.addEventListener("DOMContentLoaded", () => {
 		unblockElement(pickK0Button);
 		if (success) {
 			heatmap = newHeatmap;
-			const wantHeatmapTable = confirm(
-				"Do you want to see the heatmap table here?"
-			);
+			const wantHeatmapTable = showTableCheckbox.checked;
 
 			generateHeatmapTable(wantHeatmapTable);
 		}

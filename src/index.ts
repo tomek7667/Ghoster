@@ -20,6 +20,7 @@ if (require("electron-squirrel-startup")) {
 }
 
 const createWindow = (): void => {
+	const icon = path.join(__dirname, "images/favicon.png");
 	const mainWindow = new BrowserWindow({
 		width: 1270,
 		height: 800,
@@ -27,7 +28,7 @@ const createWindow = (): void => {
 			preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
 			nodeIntegration: true,
 		},
-		icon: path.join(__dirname, "images/favicon.png"),
+		icon,
 	});
 
 	mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
@@ -96,7 +97,7 @@ ipcMain.on(
 
 ipcMain.on("save-heatmap-csv", async (event, heatmap: Heatmap) => {
 	const delimiter = "\t";
-	const csv = heatmap.k0s.join(delimiter) + "\n";
+	const csv = delimiter + heatmap.k0s.join(delimiter) + "\n";
 	const csvRows = heatmap.heatmap.map((row) => {
 		return [row.bacteria, ...row.amounts].join(delimiter);
 	});
@@ -131,33 +132,53 @@ const createExcelFile = async (path: string, heatmap: Heatmap) => {
 	const worksheet = workbook.addWorksheet("Heatmap");
 
 	// Add the header row
-	worksheet.addRow(heatmap.k0s);
+	worksheet.addRow(["", ...heatmap.k0s]);
 
 	// Add data rows
 	heatmap.heatmap.forEach((row) => {
 		worksheet.addRow([row.bacteria, ...row.amounts]);
 	});
-
-	// Apply conditional formatting
-	if (heatmap.heatmap.length > 0) {
-		const rowLength = heatmap.heatmap[0].amounts.length + 1; // +1 for the bacteria column
-		for (let i = 2; i <= rowLength; i++) {
-			worksheet.getColumn(i).eachCell((cell, rowNumber) => {
-				if (rowNumber > 1) {
-					// skip header row
-					cell.fill = {
-						type: "gradient",
-						gradient: "angle",
-						degree: 0,
-						stops: [
-							{ position: 0, color: { argb: "FFFFFFFF" } }, // White
-							{ position: 1, color: { argb: "FFFF0000" } }, // Red
-						],
-					};
-				}
-			});
+	let min = 999999;
+	let max = -999999;
+	for (let i = 0; i < heatmap.heatmap.length; i++) {
+		const row = heatmap.heatmap[i];
+		for (let j = 0; j < row.amounts.length; j++) {
+			const amount = row.amounts[j];
+			if (amount < min) {
+				min = amount;
+			}
+			if (amount > max) {
+				max = amount;
+			}
 		}
 	}
+	worksheet.addConditionalFormatting({
+		ref: "B2:Z10000",
+		rules: [
+			{
+				priority: 1,
+				type: "colorScale",
+				cfvo: [
+					{
+						type: "min",
+						value: min,
+					},
+					{
+						type: "max",
+						value: max,
+					},
+				],
+				color: [
+					{
+						argb: "FFFFFF",
+					},
+					{
+						argb: "FF0000",
+					},
+				],
+			},
+		],
+	});
 	const buffer = await workbook.xlsx.writeBuffer();
 	writeFileSync(path, buffer as Buffer);
 };
