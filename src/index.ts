@@ -1,3 +1,4 @@
+import path from "path";
 import {
 	app,
 	BrowserWindow,
@@ -6,12 +7,20 @@ import {
 	IpcMainEvent,
 	shell,
 } from "electron";
-import { writeFileSync } from "fs";
 import * as ExcelJS from "exceljs";
-import path from "path";
-import { generateHeatmap } from "./lib";
-import { FileExtensionHandler } from "biotech-js";
 import {
+	writeFileSync,
+	mkdirSync,
+	createReadStream,
+	createWriteStream,
+} from "fs";
+import zlib from "zlib";
+import { FileExtensionHandler } from "biotech-js";
+
+import { generateHeatmap } from "./lib";
+
+import {
+	checkGhostStatus,
 	getFastaFileContent,
 	readSequences,
 	splitSequences,
@@ -285,6 +294,7 @@ ipcMain.on(
 				sessionId,
 			});
 		} catch (error) {
+			console.log("send-sequences-files", error);
 			setStatus(event, error?.message, "danger");
 		}
 	}
@@ -303,10 +313,66 @@ ipcMain.on("abort-sequences-status", async (event, sessionId: string) => {
 
 ipcMain.on("check-sequences-status", async (event, _sessionId: string) => {
 	sessionId = _sessionId;
-	intervalId = setInterval(() => {
-		event.sender.send("check-sequences-status", {
-			message: `(${new Date().toLocaleString()}) Checking sequences status...`,
-			type: "warning",
-		});
+	intervalId = setInterval(async () => {
+		try {
+			const { completelyDone, ghostkoalaStatus, resultBase64 } =
+				await checkGhostStatus(sessionId);
+			setStatus(
+				event,
+				`(${new Date().toLocaleString()}) Checking sequences status for session ID = ${sessionId}: <br /><br />Status of the job on the page:<br /><b>${ghostkoalaStatus}</b><br />completelyDone = ${completelyDone}`,
+				"warning"
+			);
+			if (completelyDone) {
+				clearInterval(intervalId);
+				setStatus(
+					event,
+					`(${new Date().toLocaleString()}) Job is done. Downloading the result...`,
+					"success"
+				);
+				const tempDir = path.join(app.getPath("temp"), sessionId);
+				mkdirSync(tempDir, { recursive: true });
+				const resultFile = path.join(tempDir, "result.top.gz");
+				writeFileSync(resultFile, Buffer.from(resultBase64, "base64"));
+				setStatus(
+					event,
+					`(${new Date().toLocaleString()}) Result downloaded to ${resultFile}. Unzipping...`,
+					"success"
+				);
+				const destFile = resultFile.replace(".gz", ".csv");
+				await gunzipFile(resultFile, destFile);
+				setStatus(
+					event,
+					`(${new Date().toLocaleString()}) Result unzipped to ${destFile}.`,
+					"success"
+				);
+				event.sender.send("csv-saved", destFile);
+			}
+		} catch (error) {
+			console.log("check-sequences-status", error);
+			setStatus(event, error?.message, "danger");
+		}
 	}, CHECK_INTERVAL_SECONDS * 1000);
 });
+
+function gunzipFile(sourcePath: string, destPath: string): Promise<void> {
+	return new Promise((resolve, reject) => {
+		// Create a read stream
+		const readStream = createReadStream(sourcePath);
+		// Create a write stream
+		const writeStream = createWriteStream(destPath);
+		// Create a gunzip transform stream
+		const unzip = zlib.createGunzip();
+
+		// Pipe the read stream through the unzip stream into the write stream
+		readStream
+			.pipe(unzip)
+			.pipe(writeStream)
+			.on("finish", () => {
+				resolve();
+			})
+			.on("error", (err) => {
+				console.error("Error during decompression:", err);
+				reject(err);
+			});
+	});
+}

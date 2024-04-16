@@ -1,3 +1,4 @@
+import PocketBase from "pocketbase";
 import {
 	FastaSequenceFile,
 	FastqSequenceFile,
@@ -7,7 +8,7 @@ import {
 } from "biotech-js";
 
 export const readSequences = async (files: string[]) => {
-	const sequences: { name: string; sequence: string }[] = [];
+	let sequences: { name: string; sequence: string }[] = [];
 	for (let i = 0; i < files.length; i++) {
 		const sequencePath = files[i];
 		const extension = FileExtensionHandler.fileExtensionToEnum(
@@ -21,7 +22,7 @@ export const readSequences = async (files: string[]) => {
 					name: sequence.description,
 					sequence: sequence.sequence,
 				}));
-				sequences.push(..._sequences);
+				sequences = sequences.concat(_sequences);
 				break;
 			}
 			case FileExtension.Fastq: {
@@ -31,7 +32,7 @@ export const readSequences = async (files: string[]) => {
 					name: sequence.sequenceIdentifier1,
 					sequence: sequence.sequence,
 				}));
-				sequences.push(..._sequences);
+				sequences = sequences.concat(_sequences);
 				break;
 			}
 			case FileExtension.Genbank: {
@@ -41,11 +42,12 @@ export const readSequences = async (files: string[]) => {
 					name: sequence.Locus.Name,
 					sequence: sequence.Origin,
 				}));
-				sequences.push(..._sequences);
+				sequences = sequences.concat(_sequences);
 				break;
 			}
-			default:
+			default: {
 				throw new Error(`Invalid file extension: ${sequencePath}`);
+			}
 		}
 	}
 	return sequences;
@@ -127,6 +129,7 @@ ghostkoala
 		headers,
 		body,
 	});
+	// console.log(response.status, response.statusText);
 	const text = await response.text();
 	if (text.includes("An email has been sent to")) {
 		return;
@@ -137,4 +140,13 @@ ghostkoala
 			}`
 		);
 	}
+};
+
+export const checkGhostStatus = async (sessionId: string) => {
+	const pb = new PocketBase("https://pocketbase.cyber-man.pl");
+	const record = await pb
+		.collection("gk_emails_sent")
+		.getFirstListItem(`receiverEmail="koala_${sessionId}@cyber-man.pl"`);
+
+	return record;
 };

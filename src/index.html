@@ -9,26 +9,6 @@
 			<h1 id="title">Ghoster Heatmap</h1>
 			<div>author: Tomasz Dąbrowski</div>
 		</section>
-		<!-- <div class="file"> -->
-		<!-- TODO: User chooses either one:
-							- Upload fasta to koala and wait for the processing result. Give the user a link to the result
-							or
-							- Upload csv (koala results) - skipping the above							
-						-->
-		<!-- <label class="file-label">
-							<input
-								class="file-input"
-								type="file"
-								id="sequence-file-input"
-							/>
-							<span class="file-cta">
-								<span class="file-label"
-									>Select the input file</span
-								>
-							</span>
-						</label> -->
-		<!-- </div> -->
-		<!-- <span id="sequence-file-label"></span> -->
 		<section class="section content">
 			<h2>Send sequences to Ghost</h2>
 			<div class="buttons">
@@ -38,6 +18,10 @@
 				<button class="button is-danger" id="send-button">Send</button>
 				<button class="button is-link is-outlined" id="update-session-id-button">Update session ID</button>
 				<input class="input" type="text" id="session-id-input" placeholder="ID of your session" />
+				<label class="checkbox">
+					<input type="checkbox" id="should-run-next-checkbox" />
+					Should run next step when finished <i>(Remember to set k0 file)</i>
+				</label>
 			</div>
 			<div class="box">
 				<p>Picked sequences files:</p>

@@ -58,6 +58,9 @@ window.addEventListener("DOMContentLoaded", () => {
 	);
 	const runButton = document.getElementById("run-button");
 	const showTableCheckbox: any = document.getElementById("show-table-checkbox");
+	const shouldRunNextCheckbox: any = document.getElementById(
+		"should-run-next-checkbox"
+	);
 
 	const updateGhostFiles = () => {
 		clearGhostFiles();
@@ -263,12 +266,10 @@ window.addEventListener("DOMContentLoaded", () => {
 	const setStatusBox = (message: string, type: string) => {
 		clearStatusBox();
 		statusBox.classList.add(`is-${type}`);
-		statusBox.innerText = message;
+		statusBox.innerHTML = message;
 	};
 
 	sendButton.addEventListener("click", () => {
-		blockElement(sendButton);
-		blockElement(pickSequencesButton);
 		ipcRenderer.send("send-sequences-files", sequencesFilesPaths);
 		clearStatusBox();
 		setStatusBox("Sending sequences files...", "link");
@@ -279,8 +280,6 @@ window.addEventListener("DOMContentLoaded", () => {
 		ipcRenderer.send("check-sequences-status", sessionId);
 	});
 	ipcRenderer.on("send-sequences-files", (event, args) => {
-		unblockElement(sendButton);
-		unblockElement(pickSequencesButton);
 		const { sessionId: newSessionId } = args;
 		sessionId = newSessionId;
 		sessionIdInput.value = sessionId;
@@ -290,6 +289,11 @@ window.addEventListener("DOMContentLoaded", () => {
 		const { message, type } = args;
 		clearStatusBox();
 		setStatusBox(message, type);
-		// TODO: if it's done, automatically download, unpack files and set them as 'ghost output files'
+	});
+	ipcRenderer.on("csv-saved", (event, csvPath) => {
+		csvpaths = [csvPath];
+		if (shouldRunNextCheckbox.checked) {
+			runButton.click();
+		}
 	});
 });
