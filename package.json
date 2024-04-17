@@ -1,7 +1,7 @@
 {
 	"name": "ghoster-heatmap",
 	"productName": "Ghoster Heatmap",
-	"version": "2.0.1",
+	"version": "2.0.2",
 	"main": ".webpack/main",
 	"scripts": {
 		"start": "electron-forge start",
@@ -44,9 +44,11 @@
 		"typescript": "^5.4.5"
 	},
 	"dependencies": {
+		"axios": "^1.6.8",
 		"biotech-js": "^1.0.10",
 		"electron-squirrel-startup": "^1.0.0",
 		"exceljs": "^4.4.0",
+		"form-data": "^4.0.0",
 		"pocketbase": "^0.21.1",
 		"zlib": "^1.0.5"
 	}
