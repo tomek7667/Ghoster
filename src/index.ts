@@ -28,6 +28,7 @@ import {
 } from "./lib/ghost";
 
 const CHECK_INTERVAL_SECONDS = 3;
+const SPLIT_SIZE = 250_000;
 
 interface Heatmap {
 	k0s: string[];
@@ -262,9 +263,9 @@ ipcMain.on(
 			// 1. read sequences
 			setStatus(event, "1/5 Reading sequences...", "link");
 			const sequences = await readSequences(files);
-			// 2. split sequences into 500_000 sequences fasta files
+			// 2. split sequences into SPLIT_SIZE sequences fasta files
 			setStatus(event, "2/5 Splitting sequences...", "link");
-			const splittedSequencesFiles = splitSequences(sequences, 500_000);
+			const splittedSequencesFiles = splitSequences(sequences, SPLIT_SIZE);
 			// 3. saving splitted sequences files
 			setStatus(event, `3/5 Saving splitted sequences files...`, "link");
 			const contents = splittedSequencesFiles.map((file) =>
@@ -276,7 +277,7 @@ ipcMain.on(
 					event,
 					`4/5 Uploading sequences to Ghost Koala... (${i + 1}/${
 						contents.length
-					})`,
+					}) - id: ${sessionId}`,
 					"link"
 				);
 				const fastaContent = contents[i];

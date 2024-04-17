@@ -1,4 +1,6 @@
 import PocketBase from "pocketbase";
+import axios from "axios";
+import FData from "form-data";
 import {
 	FastaSequenceFile,
 	FastqSequenceFile,
@@ -93,31 +95,25 @@ export const uploadGhostFiles = async (
 ) => {
 	const email = `koala_${sessionId}@cyber-man.pl`;
 	const url = `https://www.kegg.jp:443/kegg-bin/blastkoala_request`;
+	const body = new FData();
+	body.append("sequence_data", "");
+	body.append("input_file", fastaContent, `${sessionId}_${i}.fa`);
+	body.append("db_type", "c_family_euk+genus_prok+viruses");
+	body.append("email", email);
+	body.append("type", "ghostkoala");
 	const headers = {
 		Origin: "https://www.kegg.jp",
 		Accept:
 			"text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
 		Referer: "https://www.kegg.jp/ghostkoala/",
+		Connection: "close",
+		...body.getHeaders(),
 	};
-	const body = new FormData();
-	body.append("sequence_data", "");
-	body.append(
-		"input_file",
-		new Blob([fastaContent], { type: "text/plain" }),
-		`${sessionId}_${i}.fa`
-	);
-	body.append("db_type", "c_family_euk+genus_prok+viruses");
-	body.append("email", email);
-	body.append("type", "ghostkoala");
-	const response = await fetch(url, {
-		method: "POST",
-		headers: {
-			...headers,
-			"Content-Type": `multipart/form-data;`,
-		},
-		body,
+	const response = await axios.postForm(url, body, {
+		headers,
+		timeout: 600_000,
 	});
-	const text = await response.text();
+	const text = response.data;
 	if (text.includes("An email has been sent to")) {
 		return;
 	} else {
