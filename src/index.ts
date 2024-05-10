@@ -20,11 +20,9 @@ import { FileExtensionHandler } from "biotech-js";
 import { generateHeatmap } from "./lib";
 
 import {
-	checkGhostStatus,
 	getFastaFileContent,
 	readSequences,
 	splitSequences,
-	uploadGhostFiles,
 } from "./lib/ghost";
 
 const CHECK_INTERVAL_SECONDS = 3;
@@ -255,51 +253,6 @@ ipcMain.on("pick-sequences-files", async (event) => {
 
 let intervalId: NodeJS.Timeout;
 let sessionId: string;
-ipcMain.on(
-	"send-sequences-files",
-	async (event: IpcMainEvent, files: string[]) => {
-		try {
-			const _sessionId = Math.random().toString(36).substring(7);
-			// 1. read sequences
-			setStatus(event, "1/5 Reading sequences...", "link");
-			const sequences = await readSequences(files);
-			// 2. split sequences into SPLIT_SIZE sequences fasta files
-			setStatus(event, "2/5 Splitting sequences...", "link");
-			const splittedSequencesFiles = splitSequences(sequences, SPLIT_SIZE);
-			// 3. saving splitted sequences files
-			setStatus(event, `3/5 Saving splitted sequences files...`, "link");
-			const contents = splittedSequencesFiles.map((file) =>
-				getFastaFileContent(file.sequences)
-			);
-			// 4. Upload them to ghost koala
-			for (let i = 0; i < contents.length; i++) {
-				setStatus(
-					event,
-					`4/5 Uploading sequences to Ghost Koala... (${i + 1}/${
-						contents.length
-					}) - id: ${sessionId}`,
-					"link"
-				);
-				const fastaContent = contents[i];
-				await uploadGhostFiles(fastaContent, _sessionId, i);
-			}
-
-			// 5. Send back the session id
-			setStatus(
-				event,
-				`5/5 All sequences uploaded. Running status checker each ${CHECK_INTERVAL_SECONDS} seconds...`,
-				"success"
-			);
-			sessionId = _sessionId;
-			event.sender.send("send-sequences-files", {
-				sessionId,
-			});
-		} catch (error) {
-			// console.log("send-sequences-files", error);
-			setStatus(event, error?.message, "danger");
-		}
-	}
-);
 
 const setStatus = (event: IpcMainEvent, message: string, type: string) => {
 	event.sender.send("check-sequences-status", {
@@ -310,53 +263,6 @@ const setStatus = (event: IpcMainEvent, message: string, type: string) => {
 
 ipcMain.on("abort-sequences-status", async (event, sessionId: string) => {
 	clearInterval(intervalId);
-});
-
-ipcMain.on("check-sequences-status", async (event, _sessionId: string) => {
-	sessionId = _sessionId;
-	intervalId = setInterval(async () => {
-		try {
-			const { completelyDone, ghostkoalaStatus, resultBase64 } =
-				await checkGhostStatus(sessionId);
-			setStatus(
-				event,
-				`(${new Date().toLocaleString()}) Checking sequences status for session ID = ${sessionId}: <br /><br />Status of the job on the page:<br /><b>${ghostkoalaStatus}</b><br />completelyDone = ${completelyDone}`,
-				"warning"
-			);
-			if (completelyDone) {
-				clearInterval(intervalId);
-				setStatus(
-					event,
-					`(${new Date().toLocaleString()}) Job is done. Downloading the result...`,
-					"success"
-				);
-				const tempDir = path.join(app.getPath("temp"), sessionId);
-				mkdirSync(tempDir, { recursive: true });
-				const resultFile = path.join(tempDir, "result.top.gz");
-				writeFileSync(resultFile, Buffer.from(resultBase64, "base64"));
-				setStatus(
-					event,
-					`(${new Date().toLocaleString()}) Result downloaded to ${resultFile}. Unzipping...`,
-					"success"
-				);
-				const destFile = resultFile.replace(".gz", ".csv");
-				await gunzipFile(resultFile, destFile);
-				setStatus(
-					event,
-					`(${new Date().toLocaleString()}) Result unzipped to ${destFile}.`,
-					"success"
-				);
-				event.sender.send("csv-saved", destFile);
-			}
-		} catch (error) {
-			// console.log("check-sequences-status", error);
-			setStatus(
-				event,
-				`${error?.message}<br /><br />If you are getting not-existing records, just wait for the e-mail confirmation to hit the worker.`,
-				"danger"
-			);
-		}
-	}, CHECK_INTERVAL_SECONDS * 1000);
 });
 
 function gunzipFile(sourcePath: string, destPath: string): Promise<void> {
